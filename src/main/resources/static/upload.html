@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CSV 上传 - 发票工具</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; padding: 2rem; }
+    .container { max-width: 640px; margin: auto; }
+    label { display:block; margin-bottom: .5rem; }
+    input[type=file] { margin-bottom: 1rem; }
+    button { padding: .5rem 1rem; }
+    #status { margin-top: 1rem; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>发票同机构订单处理器</h1>
+      <h2>请将包含CSV的文件上传</h2>
+      <h3>上传之前请手动勾选，把所有POP订单的机构筛选出去（POP订单机构是无法合开的）</h3>
+    
+    <form id="uploadForm">
+      <label for="file">选择 CSV 文件：</label>
+      <input id="file" name="file" type="file" accept=".csv,text/csv" required />
+      <div>
+        <button type="submit">上传并处理</button>
+      </div>
+    </form>
+    <div id="status"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const status = document.getElementById('status');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fileInput = document.getElementById('file');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        status.textContent = '请先选择一个 CSV 文件。';
+        return;
+      }
+
+      const fd = new FormData();
+      fd.append('file', fileInput.files[0]);
+
+      status.textContent = '上传中...';
+
+      try {
+        const resp = await fetch('/api/csv/process', { method: 'POST', body: fd });
+        if (!resp.ok) {
+          status.textContent = '处理失败: ' + resp.status + ' ' + resp.statusText;
+          return;
+        }
+
+        const blob = await resp.blob();
+        const filename = 'processed.csv';
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        status.textContent = '处理完成，文件已下载。';
+      } catch (err) {
+        console.error(err);
+        status.textContent = '发生错误，请检查控制台。';
+      }
+    });
+  </script>
+</body>
+</html>
