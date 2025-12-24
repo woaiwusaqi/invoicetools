@@ -6,3 +6,5 @@
 
 启动程序后，访问以下网址打开：  
 [http://127.0.0.1:8080/upload.html](http://127.0.0.1:8080/upload.html)
+或者使用已部署的网站直接使用
+http://invoicetools.woaiwusaqi.cn:8080/upload.html
